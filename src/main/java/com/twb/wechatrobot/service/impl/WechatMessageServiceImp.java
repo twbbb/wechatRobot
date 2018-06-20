@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.twb.wechatrobot.entity.WechatMessage;
+import com.twb.wechatrobot.entity.WechatUser;
 import com.twb.wechatrobot.repository.WechatMessageRepository;
 import com.twb.wechatrobot.service.WechatMessageService;
 
@@ -103,7 +104,19 @@ public class WechatMessageServiceImp implements WechatMessageService
 		else if (wxMessage.fromUser != null)
 		{
 			wm.setFromuserId(wxMessage.fromUser.id);
-			wm.setFromuserName(wxMessage.fromUser.name);
+			if(!StringUtils.isEmpty(wxMessage.fromUser.name))
+			{
+				wm.setFromuserName(wxMessage.fromUser.name);
+			}
+			else
+			{
+				WechatUser wu = WechatGroupServiceImp.userMap.get(wxMessage.fromUser.id);
+				if(wu!=null)
+				{
+					wm.setFromuserName(wu.getUserName());
+				}
+			}
+			
 		}
 	}
 
@@ -149,8 +162,8 @@ public class WechatMessageServiceImp implements WechatMessageService
 		saveCommonData(wxVoice, wm);
 		wm.setMessageType(WechatMessage.MESSAGETYPE_VOICE);
 		// wm.setContentText(wxVoice.);
-		// wm.setContentFile(wxVoice.voice.getPath().replace(file_dir, ""));
-		// wechatClient.fetchVoice((WXVoice) message);
+		 wm.setContentFile(wxVoice.voice.getPath().replace(file_dir, ""));
+//		 wechatClient.fetchVoice((WXVoice) message);
 		wechatMessageRepository.save(wm);
 	}
 

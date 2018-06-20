@@ -102,6 +102,7 @@ public class MyWeChatListener extends WeChatListener
 			else if (message instanceof WXVoice)
 			{
 				WXVoice wxVoice = (WXVoice) message;
+				wechatClient.fetchVoice(wxVoice);
 				wechatMessageService.handleWXVoice(wxVoice);
 			}
 		}
