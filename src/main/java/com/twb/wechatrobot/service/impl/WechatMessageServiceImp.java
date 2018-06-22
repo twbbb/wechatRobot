@@ -1,6 +1,10 @@
 package com.twb.wechatrobot.service.impl;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,10 +13,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.aliyun.openservices.ons.api.SendResult;
+import com.twb.commondata.data.CommitchainMqData;
+import com.twb.wechatrobot.data.MessageGroup;
+import com.twb.wechatrobot.data.MyWeChatListener;
+import com.twb.wechatrobot.entity.CommitchainLog;
 import com.twb.wechatrobot.entity.WechatMessage;
 import com.twb.wechatrobot.entity.WechatUser;
+import com.twb.wechatrobot.repository.CommitchainLogRepository;
 import com.twb.wechatrobot.repository.WechatMessageRepository;
+import com.twb.wechatrobot.service.MqProductService;
 import com.twb.wechatrobot.service.WechatMessageService;
+import com.twb.wechatrobot.utils.GroupMessageQueue;
 
 import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXGroup;
 import me.xuxiaoxiao.chatapi.wechat.entity.message.WXImage;
@@ -29,10 +41,26 @@ public class WechatMessageServiceImp implements WechatMessageService
 
 	@Autowired
 	private WechatMessageRepository wechatMessageRepository;
+	
+	@Autowired
+	CommitchainLogRepository commitchainLogRepository;
+	
+	@Autowired
+	MqProductService mqProductServiceImp;
 
 	@Value("${file_dir}")
 	private String file_dir;
+	
+	@Value("${COMMITCHAIN_GROUP_FLAG}")
+	private String commitchain_group_flag;
+	
+	@Value("${COMMITCHAIN_COUNTERPARTY}")
+	private String commitchain_counterparty;
+	
 
+	@Value("${GROUPMESSAGE_FLAG}")
+	private String groupmessage_flag;
+	
 	private void saveCommonData(WXMessage wxMessage, WechatMessage wm)
 	{
 		wm.setTimestamp(new Date(wxMessage.timestamp));
@@ -128,6 +156,57 @@ public class WechatMessageServiceImp implements WechatMessageService
 		wm.setMessageType(WechatMessage.MESSAGETYPE_TEXT);
 		wm.setContentText(wxText.content);
 		wechatMessageRepository.save(wm);
+		if(wxText.fromGroup!=null)
+		{
+			logger.info("wxText.fromGroup.isOwner:"+wxText.fromGroup.isOwner);
+			logger.info("wxText.fromGroup.name:"+wxText.fromGroup.name);
+		}
+		if(wxText.fromGroup!=null&&wxText.fromGroup.isOwner)
+		{
+			//如果是群发群，并且不是机器人发的消息
+			if(wxText.fromGroup.name.equals(groupmessage_flag)&&!wxText.fromUser.id.equals(MyWeChatListener.wechatClient.userMe().id))
+			{
+				MessageGroup mg = new MessageGroup();
+				mg.setContent(wxText.content);
+				mg.setGroupName(wxText.fromGroup.name);
+				mg.setId(wxText.fromGroup.id);
+				GroupMessageQueue.add(mg);
+			}
+			//消息上链群
+			else if(wxText.fromGroup.name.startsWith(commitchain_group_flag))
+			{
+				Map memos = new HashMap();
+				memos.put("group", wm.getWxgroupName());
+				memos.put("user", wm.getFromuserName());
+				memos.put("time",toString( wm.getTimestamp()));
+				memos.put("content", wm.getContentText());
+				CommitchainMqData cmd = new CommitchainMqData();
+				cmd.setAmountcurrency("SWT");
+				cmd.setAmountvalue(0.00001);
+				cmd.setBusinessid(wm.getMsgid());
+				cmd.setCounterparty(commitchain_counterparty);
+				cmd.setMemos(memos);
+				
+				SendResult sr = mqProductServiceImp.sendCommitChainMQ(cmd);
+				CommitchainLog cl = new CommitchainLog();
+				cl.setWechatMessageId(wm.getMsgid());
+				if(sr!=null)
+				{
+					logger.info("上链成功success");
+					cl.setCommitchainDate(new Date());
+					cl.setCommitchainMessageId(sr.getMessageId());
+					cl.setCommitchainState(CommitchainLog.STATE_SUCCESS);
+				}
+				else
+				{
+					logger.info("上链失败 fail");
+					cl.setCommitchainState(CommitchainLog.STATE_FAIL);
+					cl.setCommitchainDate(new Date());
+				}
+				commitchainLogRepository.save(cl);
+			}
+			
+		}
 	}
 
 	@Override
@@ -165,6 +244,22 @@ public class WechatMessageServiceImp implements WechatMessageService
 		 wm.setContentFile(wxVoice.voice.getPath().replace(file_dir, ""));
 //		 wechatClient.fetchVoice((WXVoice) message);
 		wechatMessageRepository.save(wm);
+	}
+	public String toString(Object obj)
+	{
+		if (obj == null)
+		{
+			return "";
+		}
+		else if (obj instanceof Timestamp || obj instanceof Date)
+		{
+			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(obj);
+		}
+		else
+		{
+			return obj.toString();
+		}
+
 	}
 
 }

@@ -1,7 +1,6 @@
 package com.twb.wechatrobot.data;
 
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +63,24 @@ public class MyWeChatListener extends WeChatListener
 
 		try
 		{
-			wechatGroupService.handleAllGroup(wxGroupMap);
+			Thread thread = new Thread()
+			{
+				@Override
+				public void run()
+				{
+					try
+					{
+						wechatGroupService.handleAllGroup(wxGroupMap);
+					}
+					catch (Exception e)
+					{
+						logger.error("群组处理失败2！！");
+						e.printStackTrace();
+					}
+				}
+			};
+			thread.start();
+			
 		}
 		catch (Exception e)
 		{
@@ -79,7 +95,6 @@ public class MyWeChatListener extends WeChatListener
 	@Override
 	public void onMessage(WXMessage message)
 	{
-		System.out.println(message.getClass().getName() + ",获取到消息：" + GSON.toJson(message));
 
 		logger.info(message.getClass().getName() + ",获取到消息：" + GSON.toJson(message));
 		try

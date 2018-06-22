@@ -110,6 +110,7 @@ public class WechatGroupServiceImp implements WechatGroupService
 		{
 			
 			WechatUser wu = userMapEntry.getValue();
+			logger.info("handleAllGroup处理用户:"+wu.getUserName());
 			logger.info(MyWeChatListener.GSON.toJson(wu));
 			wechatUserRepository.save(wu);
 		}
@@ -235,6 +236,7 @@ public class WechatGroupServiceImp implements WechatGroupService
 		{
 			
 			WechatUser wu = userMapEntry.getValue();
+			logger.info("handleAddGroup处理用户:"+wu.getUserName());
 			logger.info(MyWeChatListener.GSON.toJson(wu));
 			wechatUserRepository.save(wu);
 		}
