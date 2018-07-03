@@ -19,4 +19,8 @@ public interface WechatGroupRepository extends JpaRepository<WechatGroup,Integer
 	
 	@Query(value="select o from WechatGroup o where groupName=:groupName")
 	public WechatGroup getWechatGroupByName(@Param("groupName") String groupName ) throws Exception;
+	
+	
+	
+	
 }
