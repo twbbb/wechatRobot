@@ -1,5 +1,6 @@
 package com.twb.wechatrobot.service.impl;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,16 +17,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
-import com.twb.wechatrobot.data.MyWeChatListener;
 import com.twb.wechatrobot.entity.WechatGroup;
 import com.twb.wechatrobot.entity.WechatGroupLog;
+import com.twb.wechatrobot.entity.WechatGroupMembers;
 import com.twb.wechatrobot.entity.WechatUser;
 import com.twb.wechatrobot.repository.WechatGroupLogRepository;
 import com.twb.wechatrobot.repository.WechatGroupMembersRepository;
 import com.twb.wechatrobot.repository.WechatGroupRepository;
+import com.twb.wechatrobot.repository.WechatMessageRepository;
 import com.twb.wechatrobot.repository.WechatUserRepository;
 import com.twb.wechatrobot.service.WechatGroupService;
+import com.twb.wechatrobot.thread.MyWeChatListener;
 
 import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXGroup;
 import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXGroup.Member;
@@ -44,13 +49,18 @@ public class WechatGroupServiceImp implements WechatGroupService
 	@Autowired
 	private WechatUserRepository wechatUserRepository;
 	
-	public static Set GROUPSET = new HashSet();
+	@Autowired
+	private	WechatMessageRepository wechatMessageRepository;
 	
-	public static Map<String, WechatUser> userMap = new HashMap();
-	@Transactional(rollbackFor = Exception.class)
-	public void handleAllGroup(HashMap<String, WXGroup> wxGroupMap) throws Exception
-	{
+	public static Set GROUPSET = Collections.synchronizedSet(new HashSet());
+	
+	public static Map<String, WechatUser> userMap = new ConcurrentHashMap();
+	
 
+	@Transactional(rollbackFor = Exception.class)
+	public void deleteAllGroup() throws Exception
+	{
+		logger.info("deleteAllGroup start");
 		//将数据复制到日志表
 		List<WechatGroup> wgList = wechatGroupRepository.getAllWechatGroup();
 		if(wgList!=null&&wgList.size()>0)
@@ -58,7 +68,15 @@ public class WechatGroupServiceImp implements WechatGroupService
 			logger.info("复制历史群组数据:"+wgList.size());
 			moveWgList(wgList);
 		}
-
+		GROUPSET.clear();
+		userMap.clear();
+		logger.info("deleteAllGroup end");
+	}
+	
+	@Transactional(rollbackFor = Exception.class)
+	public void handleAllGroup(HashMap<String, WXGroup> wxGroupMap) throws Exception
+	{
+		logger.info("handleAllGroup start");
 		for (Entry<String, WXGroup> entry : wxGroupMap.entrySet())
 		{
 			WXGroup wxGroup = entry.getValue();
@@ -70,6 +88,7 @@ public class WechatGroupServiceImp implements WechatGroupService
 			wg.setCreatetime(new Date());
 			wg.setGroupId(wxGroup.id);
 			wg.setGroupName(wxGroup.name);
+			wg.setMembers(wxGroup.members.size());
 			wechatGroupRepository.save(wg);
 			
 			//将群组用户数据存入用户表
@@ -85,9 +104,10 @@ public class WechatGroupServiceImp implements WechatGroupService
 					String fromgroupName = wu.getFromgroupName();
 					if(fromgroupId.length()<3800)
 					{
-						wu.setFromgroupId(fromgroupId+"#&"+wxGroup.id);
+						wu.setFromgroupId(fromgroupId+"|#"+wxGroup.id);
 					}
-					wu.setFromgroupName(fromgroupName+"#&"+wxGroup.name);
+					wu.setFromgroupName(fromgroupName+"|#"+wxGroup.name);
+					wu.setFromgroupSize(wu.getFromgroupSize()+1);
 				}
 				else
 				{
@@ -97,25 +117,26 @@ public class WechatGroupServiceImp implements WechatGroupService
 					wu.setFromgroupName(wxGroup.name);
 					wu.setUserId(member.id);
 					String name = member.name.trim();
-					if(!isMessyCode(name))
+//					if(!isMessyCode(name))
 					{
 						wu.setUserName(name);
 					}
+					wu.setFromgroupSize(1);
 					userMap.put(id, wu);
 				}
 			}
 		}
-		wechatUserRepository.deleteAll();
-		for (Entry<String, WechatUser> userMapEntry : userMap.entrySet())
-		{
-			
-			WechatUser wu = userMapEntry.getValue();
-			logger.info("handleAllGroup处理用户:"+wu.getUserName());
-			logger.info(MyWeChatListener.GSON.toJson(wu));
-			wechatUserRepository.save(wu);
-		}
-
 		
+//		for (Entry<String, WechatUser> userMapEntry : userMap.entrySet())
+//		{
+//			
+//			WechatUser wu = userMapEntry.getValue();
+//			logger.info("handleAllGroup处理用户:"+wu.getUserName());
+//			logger.info(MyWeChatListener.GSON.toJson(wu));
+//			wechatUserRepository.save(wu);
+//		}
+
+		logger.info("handleAllGroup end");
 	}
 	
 	/**
@@ -175,7 +196,7 @@ public class WechatGroupServiceImp implements WechatGroupService
 		}
 	}
 
-	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void handleAddGroup(HashMap<String, WXGroup> wxGroupMap) throws Exception
 	{
 		Map<String, WechatUser> userAddMap = new HashMap();
@@ -195,6 +216,7 @@ public class WechatGroupServiceImp implements WechatGroupService
 			wg.setCreatetime(new Date());
 			wg.setGroupId(wxGroup.id);
 			wg.setGroupName(wxGroup.name);
+			wg.setMembers(wxGroup.members.size());
 			wechatGroupRepository.save(wg);
 			
 			//将群组用户数据存入用户表
@@ -212,6 +234,7 @@ public class WechatGroupServiceImp implements WechatGroupService
 					{
 						wu.setFromgroupId(fromgroupId+"|#"+wxGroup.id);
 					}
+					wu.setFromgroupSize(wu.getFromgroupSize()+1);
 					wu.setFromgroupName(fromgroupName+"|#"+wxGroup.name);
 				}
 				else
@@ -222,26 +245,54 @@ public class WechatGroupServiceImp implements WechatGroupService
 					wu.setFromgroupName(wxGroup.name);
 					wu.setUserId(member.id);
 					String name = member.name.trim();
-					if(!isMessyCode(name))
+//					if(!isMessyCode(name))
 					{
 						wu.setUserName(name);
 					}
+					wu.setFromgroupSize(1);
 					userMap.put(id, wu);
 				}
 				userAddMap.put(id, userMap.get(id));
 			}
 		}
 		
-		for (Entry<String, WechatUser> userMapEntry : userAddMap.entrySet())
-		{
-			
-			WechatUser wu = userMapEntry.getValue();
-			logger.info("handleAddGroup处理用户:"+wu.getUserName());
-			logger.info(MyWeChatListener.GSON.toJson(wu));
-			wechatUserRepository.save(wu);
-		}
+//		for (Entry<String, WechatUser> userMapEntry : userAddMap.entrySet())
+//		{
+//			
+//			WechatUser wu = userMapEntry.getValue();
+//			logger.info("handleAddGroup处理用户:"+wu.getUserName());
+//			logger.info(MyWeChatListener.GSON.toJson(wu));
+//			wechatUserRepository.save(wu);
+//		}
 
 	}
+
+	@Transactional(rollbackFor = Exception.class)
+	public void totalGroupMember(HashMap<String, WXGroup> wxGroupMap) throws Exception
+	{
+		logger.info("totalGroupMember,wxGroupMap size: "+wxGroupMap.size());
+		Date date = new Date();
+		for (Entry<String, WXGroup> entry : wxGroupMap.entrySet())
+		{
+			
+			WXGroup wxGroup = entry.getValue();
+			logger.info("totalGroupMember处理群组:"+wxGroup.name);
+			if(!StringUtils.isEmpty(wxGroup.name))
+			{
+				WechatGroupMembers wgm = new WechatGroupMembers();
+				wgm.setCreatetime(date);
+				wgm.setGroupId(wxGroup.id);
+				wgm.setGroupName(wxGroup.name);
+				wgm.setMembers(wxGroup.members.size());
+				int count = wechatMessageRepository.countMessage(wxGroup.name);
+				wgm.setMsgs(count);
+				wechatGroupMembersRepository.save(wgm);
+			}
+			
+		}
+		
+	}
+
 
 	
 

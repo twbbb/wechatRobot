@@ -21,6 +21,9 @@ public class WechatUser
 	private String userName  =""; // 用户姓名
 	private String fromgroupId  =""; // 用户所属微信群组id，用逗号分隔
 	private String fromgroupName  =""; // 用户所属微信群组名称，用逗号分隔
+	
+	private Integer fromgroupSize;//用户在多少群中
+	 
 	public Integer getId()
 	{
 		return id;
@@ -68,6 +71,14 @@ public class WechatUser
 	public void setFromgroupName(String fromgroupName)
 	{
 		this.fromgroupName = fromgroupName;
+	}
+	public Integer getFromgroupSize()
+	{
+		return fromgroupSize;
+	}
+	public void setFromgroupSize(Integer fromgroupSize)
+	{
+		this.fromgroupSize = fromgroupSize;
 	}
 
 	

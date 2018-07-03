@@ -20,13 +20,16 @@ import com.twb.wechatrobot.service.MqProductService;
 public class MqProductServiceImp implements MqProductService
 {
 
-	private static final Logger logger = LoggerFactory.getLogger(MqProductServiceImp.class);
+	private Logger logger = LoggerFactory.getLogger(MqProductServiceImp.class);
 
 	@Value("${ACCESS_KEY}")
 	private String access_key;
 
 	@Value("${SECRET_KEY}")
 	private String secret_key;
+	
+	@Value("${COMMITCHAIN}")
+	private String commitchain;
 
 	
 	Producer producer;
@@ -35,11 +38,15 @@ public class MqProductServiceImp implements MqProductService
 	@PostConstruct
 	public void init()
 	{
-		Properties producerProperties = new Properties();
-		producerProperties.setProperty(PropertyKeyConst.AccessKey, access_key);
-		producerProperties.setProperty(PropertyKeyConst.SecretKey, secret_key);
-		producer = MQUtils.createProducer(producerProperties);
-		producer.start();
+		if("Y".equals(commitchain))
+		{
+			Properties producerProperties = new Properties();
+			producerProperties.setProperty(PropertyKeyConst.AccessKey, access_key);
+			producerProperties.setProperty(PropertyKeyConst.SecretKey, secret_key);
+			producer = MQUtils.createProducer(producerProperties);
+			producer.start();
+		}
+		
 	}
 
 	@Override

@@ -1,12 +1,14 @@
 package com.twb.wechatrobot.service;
 
-import java.util.Map;
-
 import com.twb.wechatrobot.data.OutData;
 
 public interface WechatGroupShowService {
 	
-	OutData getAllGroup() throws Exception;
+	OutData getAllGroup(String page,String pagesize) throws Exception;
+
+	OutData getGroupRecord(String groupName)throws Exception;
+
+	OutData getGrpUserRecord(String groupName)throws Exception;
 	
 
 }

@@ -19,6 +19,7 @@ public class WechatGroup
 
 	private String groupId =""; //微信群组id
 	private String groupName =""; // 微信群组名称
+	private Integer members  ; // 微信群成员数量
 	public Integer getId()
 	{
 		return id;
@@ -50,6 +51,14 @@ public class WechatGroup
 	public void setGroupName(String groupName)
 	{
 		this.groupName = groupName;
+	}
+	public Integer getMembers()
+	{
+		return members;
+	}
+	public void setMembers(Integer members)
+	{
+		this.members = members;
 	}
 
 	

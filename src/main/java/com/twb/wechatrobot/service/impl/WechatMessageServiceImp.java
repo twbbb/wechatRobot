@@ -16,7 +16,6 @@ import org.springframework.util.StringUtils;
 import com.aliyun.openservices.ons.api.SendResult;
 import com.twb.commondata.data.CommitchainMqData;
 import com.twb.wechatrobot.data.MessageGroup;
-import com.twb.wechatrobot.data.MyWeChatListener;
 import com.twb.wechatrobot.entity.CommitchainLog;
 import com.twb.wechatrobot.entity.WechatMessage;
 import com.twb.wechatrobot.entity.WechatUser;
@@ -24,6 +23,7 @@ import com.twb.wechatrobot.repository.CommitchainLogRepository;
 import com.twb.wechatrobot.repository.WechatMessageRepository;
 import com.twb.wechatrobot.service.MqProductService;
 import com.twb.wechatrobot.service.WechatMessageService;
+import com.twb.wechatrobot.thread.MyWeChatListener;
 import com.twb.wechatrobot.utils.GroupMessageQueue;
 
 import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXGroup;
@@ -149,68 +149,18 @@ public class WechatMessageServiceImp implements WechatMessageService
 	}
 
 	@Override
-	public void handleWXText(WXText wxText) throws Exception
+	public WechatMessage handleWXText(WXText wxText) throws Exception
 	{
 		WechatMessage wm = new WechatMessage();
 		saveCommonData(wxText, wm);
 		wm.setMessageType(WechatMessage.MESSAGETYPE_TEXT);
 		wm.setContentText(wxText.content);
-		wechatMessageRepository.save(wm);
-		if(wxText.fromGroup!=null)
-		{
-			logger.info("wxText.fromGroup.isOwner:"+wxText.fromGroup.isOwner);
-			logger.info("wxText.fromGroup.name:"+wxText.fromGroup.name);
-		}
-		if(wxText.fromGroup!=null&&wxText.fromGroup.isOwner)
-		{
-			//如果是群发群，并且不是机器人发的消息
-			if(wxText.fromGroup.name.equals(groupmessage_flag)&&!wxText.fromUser.id.equals(MyWeChatListener.wechatClient.userMe().id))
-			{
-				MessageGroup mg = new MessageGroup();
-				mg.setContent(wxText.content);
-				mg.setGroupName(wxText.fromGroup.name);
-				mg.setId(wxText.fromGroup.id);
-				GroupMessageQueue.add(mg);
-			}
-			//消息上链群
-			else if(wxText.fromGroup.name.startsWith(commitchain_group_flag))
-			{
-				Map memos = new HashMap();
-				memos.put("group", wm.getWxgroupName());
-				memos.put("user", wm.getFromuserName());
-				memos.put("time",toString( wm.getTimestamp()));
-				memos.put("content", wm.getContentText());
-				CommitchainMqData cmd = new CommitchainMqData();
-				cmd.setAmountcurrency("SWT");
-				cmd.setAmountvalue(0.00001);
-				cmd.setBusinessid(wm.getMsgid());
-				cmd.setCounterparty(commitchain_counterparty);
-				cmd.setMemos(memos);
-				
-				SendResult sr = mqProductServiceImp.sendCommitChainMQ(cmd);
-				CommitchainLog cl = new CommitchainLog();
-				cl.setWechatMessageId(wm.getMsgid());
-				if(sr!=null)
-				{
-					logger.info("上链成功success");
-					cl.setCommitchainDate(new Date());
-					cl.setCommitchainMessageId(sr.getMessageId());
-					cl.setCommitchainState(CommitchainLog.STATE_SUCCESS);
-				}
-				else
-				{
-					logger.info("上链失败 fail");
-					cl.setCommitchainState(CommitchainLog.STATE_FAIL);
-					cl.setCommitchainDate(new Date());
-				}
-				commitchainLogRepository.save(cl);
-			}
-			
-		}
+		return wechatMessageRepository.save(wm);
+
 	}
 
 	@Override
-	public void handleWXImage(WXImage wxImage) throws Exception
+	public WechatMessage handleWXImage(WXImage wxImage) throws Exception
 	{
 		WechatMessage wm = new WechatMessage();
 		saveCommonData(wxImage, wm);
@@ -220,22 +170,22 @@ public class WechatMessageServiceImp implements WechatMessageService
 			wm.setContentFile(wxImage.image.getPath().replace(file_dir, ""));	
 		}
 		
-		wechatMessageRepository.save(wm);
+		return wechatMessageRepository.save(wm);
 	}
 
 	@Override
-	public void handleWXLink(WXLink wxLink) throws Exception
+	public WechatMessage handleWXLink(WXLink wxLink) throws Exception
 	{
 		WechatMessage wm = new WechatMessage();
 		saveCommonData(wxLink, wm);
 		wm.setMessageType(WechatMessage.MESSAGETYPE_LINK);
 		wm.setContentText(wxLink.linkName);
 		wm.setContentLink(wxLink.linkUrl);
-		wechatMessageRepository.save(wm);
+		return  wechatMessageRepository.save(wm);
 	}
 
 	@Override
-	public void handleWXVoice(WXVoice wxVoice) throws Exception
+	public WechatMessage handleWXVoice(WXVoice wxVoice) throws Exception
 	{
 		WechatMessage wm = new WechatMessage();
 		saveCommonData(wxVoice, wm);
@@ -243,7 +193,7 @@ public class WechatMessageServiceImp implements WechatMessageService
 		// wm.setContentText(wxVoice.);
 		 wm.setContentFile(wxVoice.voice.getPath().replace(file_dir, ""));
 //		 wechatClient.fetchVoice((WXVoice) message);
-		wechatMessageRepository.save(wm);
+		 return wechatMessageRepository.save(wm);
 	}
 	public String toString(Object obj)
 	{
@@ -260,6 +210,34 @@ public class WechatMessageServiceImp implements WechatMessageService
 			return obj.toString();
 		}
 
+	}
+
+	@Override
+	public WechatMessage saveMessage(WXMessage message) throws Exception
+	{
+		WechatMessage wm = null;
+		if (message instanceof WXText)
+		{
+			WXText wxText = (WXText) message;
+			wm =this.handleWXText(wxText);
+		}
+		else if (message instanceof WXImage)
+		{
+			WXImage wxImage = (WXImage) message;
+			wm =this.handleWXImage(wxImage);
+		}
+		else if (message instanceof WXLink)
+		{
+			WXLink wxLink = (WXLink) message;
+			wm =this.handleWXLink(wxLink);
+		}
+		else if (message instanceof WXVoice)
+		{
+			WXVoice wxVoice = (WXVoice) message;
+			MyWeChatListener.wechatClient.fetchVoice(wxVoice);
+			wm =this.handleWXVoice(wxVoice);
+		}
+		return wm;
 	}
 
 }

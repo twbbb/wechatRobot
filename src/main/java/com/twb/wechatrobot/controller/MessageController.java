@@ -29,6 +29,7 @@ public class MessageController {
 	@ResponseBody
 	public OutData getMsg(@RequestBody InData inData)
 	{
+  		logger.info("============>getMsg");
 		OutData outData = new OutData();
 		try
 		{

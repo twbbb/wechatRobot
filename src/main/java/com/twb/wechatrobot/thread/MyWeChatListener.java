@@ -1,6 +1,7 @@
-package com.twb.wechatrobot.data;
+package com.twb.wechatrobot.thread;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,15 +10,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.twb.wechatrobot.service.WechatGroupService;
 import com.twb.wechatrobot.service.WechatMessageService;
+import com.twb.wechatrobot.service.msghandler.MessageHandler;
 
 import me.xuxiaoxiao.chatapi.wechat.WeChatClient;
 import me.xuxiaoxiao.chatapi.wechat.WeChatClient.WeChatListener;
 import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXGroup;
-import me.xuxiaoxiao.chatapi.wechat.entity.message.WXImage;
-import me.xuxiaoxiao.chatapi.wechat.entity.message.WXLink;
 import me.xuxiaoxiao.chatapi.wechat.entity.message.WXMessage;
-import me.xuxiaoxiao.chatapi.wechat.entity.message.WXText;
-import me.xuxiaoxiao.chatapi.wechat.entity.message.WXVoice;
 
 public class MyWeChatListener extends WeChatListener
 {
@@ -25,10 +23,15 @@ public class MyWeChatListener extends WeChatListener
 
 	private static final Logger logger = LoggerFactory.getLogger(MyWeChatListener.class);
 
-	WechatMessageService wechatMessageService;
-	WechatGroupService wechatGroupService;
+	WechatMessageService wechatMessageServiceImp;
+
+	WechatGroupService wechatGroupServiceImp;
+
+	List<MessageHandler> messageHandlerList;
 
 	public static WeChatClient wechatClient;
+
+	public static volatile boolean finish = false;
 
 	@Override
 	public void onModContact()
@@ -38,7 +41,11 @@ public class MyWeChatListener extends WeChatListener
 
 		try
 		{
-			wechatGroupService.handleAddGroup(wxGroupMap);
+			if (finish)
+			{
+				wechatGroupServiceImp.handleAddGroup(wxGroupMap);
+			}
+
 		}
 		catch (Exception e)
 		{
@@ -63,14 +70,18 @@ public class MyWeChatListener extends WeChatListener
 
 		try
 		{
-			Thread thread = new Thread()
+			Thread thread = new Thread(new Runnable()
 			{
+
 				@Override
 				public void run()
 				{
 					try
 					{
-						wechatGroupService.handleAllGroup(wxGroupMap);
+						 Thread.sleep(30000);// 睡眠30秒，等待更新群组事件结束
+						wechatGroupServiceImp.deleteAllGroup();
+						wechatGroupServiceImp.handleAllGroup(wxGroupMap);
+						finish = true;
 					}
 					catch (Exception e)
 					{
@@ -78,9 +89,10 @@ public class MyWeChatListener extends WeChatListener
 						e.printStackTrace();
 					}
 				}
-			};
+
+			});
 			thread.start();
-			
+
 		}
 		catch (Exception e)
 		{
@@ -99,27 +111,8 @@ public class MyWeChatListener extends WeChatListener
 		logger.info(message.getClass().getName() + ",获取到消息：" + GSON.toJson(message));
 		try
 		{
-			if (message instanceof WXText)
-			{
-				WXText wxText = (WXText) message;
-				wechatMessageService.handleWXText(wxText);
-			}
-			else if (message instanceof WXImage)
-			{
-				WXImage wxImage = (WXImage) message;
-				wechatMessageService.handleWXImage(wxImage);
-			}
-			else if (message instanceof WXLink)
-			{
-				WXLink wxLink = (WXLink) message;
-				wechatMessageService.handleWXLink(wxLink);
-			}
-			else if (message instanceof WXVoice)
-			{
-				WXVoice wxVoice = (WXVoice) message;
-				wechatClient.fetchVoice(wxVoice);
-				wechatMessageService.handleWXVoice(wxVoice);
-			}
+			// 保存信息
+			wechatMessageServiceImp.saveMessage(message);
 		}
 		catch (Exception e)
 		{
@@ -127,17 +120,28 @@ public class MyWeChatListener extends WeChatListener
 			e.printStackTrace();
 			logger.error("数据库存入失败", e);
 		}
+
+		for (MessageHandler mh : messageHandlerList)
+		{
+			try
+			{
+				mh.handleMsg(message);
+			}
+			catch (Exception e)
+			{
+				logger.error("消息处理失败:" + mh.getClass().getSimpleName() + "," + message.id, e);
+			}
+		}
+
 	}
 
-	public MyWeChatListener(WechatMessageService wechatMessageService, WechatGroupService wechatGroupService)
+	public MyWeChatListener(WechatMessageService wechatMessageServiceImp, WechatGroupService wechatGroupServiceImp,
+			List<MessageHandler> messageHandlerList)
 	{
 		super();
-		this.wechatMessageService = wechatMessageService;
-		this.wechatGroupService = wechatGroupService;
+		this.wechatMessageServiceImp = wechatMessageServiceImp;
+		this.wechatGroupServiceImp = wechatGroupServiceImp;
+		this.messageHandlerList = messageHandlerList;
 	}
 
-	public void onLogout()
-	{
-		
-	}
 }
