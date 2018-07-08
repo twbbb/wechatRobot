@@ -7,41 +7,41 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import com.twb.wechatrobot.data.MessageGroup;
-import com.twb.wechatrobot.utils.GroupMessageQueue;
+import com.twb.wechatrobot.utils.QAMessageQueue;
 
-public class GroupMessageRunnable implements Runnable
+public class QAMessageRunnable implements Runnable
 {
 
-	private Logger logger = LoggerFactory.getLogger(GroupMessageRunnable.class);
+	private Logger logger = LoggerFactory.getLogger(QAMessageRunnable.class);
 
 
-	public static volatile boolean flag = false;//发送消息标志位
-	
-	public static final int timedelay = 10000;//发送消息标志位
-	
 	@Override
 	public void run()
 	{
-		logger.info("线程:" + Thread.currentThread().getName() + "运行中.....");
+		logger.info("QAMessageRunnable 线程:" + Thread.currentThread().getName() + "运行中.....");
 		while (true)
 		{
 			try
 			{
-				flag = false;
-				MessageGroup mg = GroupMessageQueue.get();
-				flag = true;
+				
+				MessageGroup mg = QAMessageQueue.get();
+				//如果群发消息在发消息，睡眠
+				while(GroupMessageRunnable.flag)
+				{
+					Thread.sleep((long) (GroupMessageRunnable.timedelay * Math.random() + 3000));
+				}
 				String content = mg.getContent();
 				File file = mg.getFile();
 				if(!StringUtils.isEmpty(content))
 				{
 					MyWeChatListener.wechatClient.sendText(MyWeChatListener.wechatClient.userContact(mg.getId()),
 							content);
-					Thread.sleep((long) (timedelay * Math.random() + 3000));
+					Thread.sleep((long) (GroupMessageRunnable.timedelay * Math.random() + 3000));
 				}
 				else if(file!=null&&file.exists())
 				{
 					MyWeChatListener.wechatClient.sendFile(MyWeChatListener.wechatClient.userContact(mg.getId()), file);
-					Thread.sleep((long) (timedelay * Math.random() + 3000));
+					Thread.sleep((long) (GroupMessageRunnable.timedelay * Math.random() + 3000));
 				}
 				
 				
@@ -49,7 +49,7 @@ public class GroupMessageRunnable implements Runnable
 			}
 			catch (Exception e)
 			{
-				logger.error("GroupMessageRunnable ,error.." ,e);
+				logger.error("QAMessageRunnable ,error.." ,e);
 				e.printStackTrace();
 			}
 		}

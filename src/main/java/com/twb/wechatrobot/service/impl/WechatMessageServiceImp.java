@@ -3,8 +3,6 @@ package com.twb.wechatrobot.service.impl;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,10 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.aliyun.openservices.ons.api.SendResult;
-import com.twb.commondata.data.CommitchainMqData;
-import com.twb.wechatrobot.data.MessageGroup;
-import com.twb.wechatrobot.entity.CommitchainLog;
 import com.twb.wechatrobot.entity.WechatMessage;
 import com.twb.wechatrobot.entity.WechatUser;
 import com.twb.wechatrobot.repository.CommitchainLogRepository;
@@ -24,7 +18,6 @@ import com.twb.wechatrobot.repository.WechatMessageRepository;
 import com.twb.wechatrobot.service.MqProductService;
 import com.twb.wechatrobot.service.WechatMessageService;
 import com.twb.wechatrobot.thread.MyWeChatListener;
-import com.twb.wechatrobot.utils.GroupMessageQueue;
 
 import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXGroup;
 import me.xuxiaoxiao.chatapi.wechat.entity.message.WXImage;
@@ -58,8 +51,7 @@ public class WechatMessageServiceImp implements WechatMessageService
 	private String commitchain_counterparty;
 	
 
-	@Value("${GROUPMESSAGE_FLAG}")
-	private String groupmessage_flag;
+	
 	
 	private void saveCommonData(WXMessage wxMessage, WechatMessage wm)
 	{

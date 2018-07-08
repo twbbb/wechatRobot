@@ -5,9 +5,12 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.twb.wechatrobot.service.AdMessageService;
 import com.twb.wechatrobot.service.WechatGroupService;
 import com.twb.wechatrobot.service.WechatMessageService;
 import com.twb.wechatrobot.service.msghandler.MessageHandler;
@@ -17,18 +20,24 @@ import me.xuxiaoxiao.chatapi.wechat.WeChatClient.WeChatListener;
 import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXGroup;
 import me.xuxiaoxiao.chatapi.wechat.entity.message.WXMessage;
 
+@Component
 public class MyWeChatListener extends WeChatListener
 {
 	public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
 	private static final Logger logger = LoggerFactory.getLogger(MyWeChatListener.class);
 
+	
+	@Autowired
 	WechatMessageService wechatMessageServiceImp;
-
+	@Autowired
 	WechatGroupService wechatGroupServiceImp;
-
+	@Autowired
 	List<MessageHandler> messageHandlerList;
 
+	@Autowired
+	AdMessageService adMessageService;
+	
 	public static WeChatClient wechatClient;
 
 	public static volatile boolean finish = false;
@@ -66,10 +75,22 @@ public class MyWeChatListener extends WeChatListener
 	@Override
 	public void onLogin()
 	{
-		HashMap<String, WXGroup> wxGroupMap = wechatClient.userGroups();
+		logger.info("onLogin");
+		
+//		try
+//		{
+//			//之前广告消息失效
+//			adMessageService.msgOverdue();
+//		}
+//		catch (Exception e1)
+//		{
+//			logger.error("广告消息失效处理失败",e1);
+//			e1.printStackTrace();
+//		}
 
 		try
 		{
+			HashMap<String, WXGroup> wxGroupMap = wechatClient.userGroups();
 			Thread thread = new Thread(new Runnable()
 			{
 
@@ -78,14 +99,14 @@ public class MyWeChatListener extends WeChatListener
 				{
 					try
 					{
-						 Thread.sleep(30000);// 睡眠30秒，等待更新群组事件结束
+						Thread.sleep(30000);// 睡眠30秒，等待更新群组事件结束
 						wechatGroupServiceImp.deleteAllGroup();
 						wechatGroupServiceImp.handleAllGroup(wxGroupMap);
 						finish = true;
 					}
 					catch (Exception e)
 					{
-						logger.error("群组处理失败2！！");
+						logger.error("群组处理失败2！！",e);
 						e.printStackTrace();
 					}
 				}
@@ -96,7 +117,7 @@ public class MyWeChatListener extends WeChatListener
 		}
 		catch (Exception e)
 		{
-			logger.error("群组处理失败！！");
+			logger.error("群组处理失败！！",e);
 			e.printStackTrace();
 		}
 
@@ -135,13 +156,5 @@ public class MyWeChatListener extends WeChatListener
 
 	}
 
-	public MyWeChatListener(WechatMessageService wechatMessageServiceImp, WechatGroupService wechatGroupServiceImp,
-			List<MessageHandler> messageHandlerList)
-	{
-		super();
-		this.wechatMessageServiceImp = wechatMessageServiceImp;
-		this.wechatGroupServiceImp = wechatGroupServiceImp;
-		this.messageHandlerList = messageHandlerList;
-	}
 
 }

@@ -13,9 +13,6 @@ import com.twb.wechatrobot.data.InData;
 import com.twb.wechatrobot.data.OutData;
 import com.twb.wechatrobot.service.WechatMessageShowService;
 
-/**
- * @author Binary Wang(https://github.com/binarywang)
- */
 @RestController
 @RequestMapping("/wechat/message")
 @CrossOrigin

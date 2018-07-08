@@ -82,6 +82,11 @@ public class WechatGroupServiceImp implements WechatGroupService
 			WXGroup wxGroup = entry.getValue();
 			logger.info("处理群组:"+wxGroup.name);
 			logger.info(MyWeChatListener.GSON.toJson(wxGroup));
+			
+			if(StringUtils.isEmpty(wxGroup.name))
+			{
+				continue;
+			}
 			GROUPSET.add(entry.getKey());
 			//将群组数据存入群组表
 			WechatGroup wg = new WechatGroup();
@@ -207,8 +212,14 @@ public class WechatGroupServiceImp implements WechatGroupService
 			{
 				continue;
 			}
-			GROUPSET.add(entry.getKey());
+			
+			
 			WXGroup wxGroup = entry.getValue();
+			if(StringUtils.isEmpty(wxGroup.name))
+			{
+				continue;
+			}
+			GROUPSET.add(entry.getKey());
 			logger.info("处理群组:"+wxGroup.name);
 			logger.info(MyWeChatListener.GSON.toJson(wxGroup));
 			//将群组数据存入群组表

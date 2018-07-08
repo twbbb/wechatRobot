@@ -1,10 +1,13 @@
 package com.twb.wechatrobot.data;
 
+import java.io.File;
+
 public class MessageGroup
 {
 	String id = "";
 	String groupName="";
 	String content="";
+	File file =null;
 	public String getId()
 	{
 		return id;
@@ -28,6 +31,14 @@ public class MessageGroup
 	public void setContent(String content)
 	{
 		this.content = content;
+	}
+	public File getFile()
+	{
+		return file;
+	}
+	public void setFile(File file)
+	{
+		this.file = file;
 	}
 			
 			

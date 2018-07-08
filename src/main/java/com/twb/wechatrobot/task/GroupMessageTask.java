@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.twb.wechatrobot.thread.GroupMessageRunnable;
+import com.twb.wechatrobot.thread.QAMessageRunnable;
 
 @Component
 public class GroupMessageTask
@@ -23,10 +24,15 @@ public class GroupMessageTask
 	public void init()
 	{
 		logger.info("GroupMessageTask start");
-		GroupMessageRunnable gr = new GroupMessageRunnable(groupmessage_flag);
+		GroupMessageRunnable gr = new GroupMessageRunnable();
 		Thread thread = new Thread(gr);
 		thread.setDaemon(true);
 		thread.start();
+		
+		QAMessageRunnable qr = new QAMessageRunnable();
+		Thread thread2 = new Thread(qr);
+		thread2.setDaemon(true);
+		thread2.start();
 		
 	}
 	
