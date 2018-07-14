@@ -90,7 +90,7 @@ public class MyWeChatListener extends WeChatListener
 
 		try
 		{
-			HashMap<String, WXGroup> wxGroupMap = wechatClient.userGroups();
+			
 			Thread thread = new Thread(new Runnable()
 			{
 
@@ -99,6 +99,7 @@ public class MyWeChatListener extends WeChatListener
 				{
 					try
 					{
+						HashMap<String, WXGroup> wxGroupMap = wechatClient.userGroups();
 						Thread.sleep(30000);// 睡眠30秒，等待更新群组事件结束
 						wechatGroupServiceImp.deleteAllGroup();
 						wechatGroupServiceImp.handleAllGroup(wxGroupMap);

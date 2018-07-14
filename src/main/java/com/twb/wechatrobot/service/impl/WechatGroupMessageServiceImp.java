@@ -216,15 +216,15 @@ public class WechatGroupMessageServiceImp implements WechatGroupMessageService
 			String id = wxgroup.id;
 			if (!StringUtils.isEmpty(name) && !StringUtils.isEmpty(id))
 			{
-				if("开发".equals(name))
-				{
+//				if("开发".equals(name))
+//				{
 					MessageGroup mg = new MessageGroup();
 					mg.setContent(content);
 					mg.setGroupName(name);
 					mg.setId(id);
 					mg.setFile(file);
 					GroupMessageQueue.add(mg);
-				}
+//				}
 				
 			}
 		}

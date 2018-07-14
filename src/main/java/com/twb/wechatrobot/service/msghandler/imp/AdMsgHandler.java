@@ -1,5 +1,6 @@
 package com.twb.wechatrobot.service.msghandler.imp;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -33,7 +34,7 @@ public class AdMsgHandler implements MessageHandler
 	AdMessageRepository adMessageRepository;
 	private Logger logger = LoggerFactory.getLogger(AdMsgHandler.class);
 
-	private List<String> adList;
+	public static List<String> adList = new ArrayList();
 	private Pattern pattern;
 
 	

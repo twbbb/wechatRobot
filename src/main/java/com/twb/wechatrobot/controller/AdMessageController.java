@@ -12,18 +12,29 @@ import org.springframework.web.bind.annotation.RestController;
 import com.twb.wechatrobot.data.InData;
 import com.twb.wechatrobot.data.OutData;
 import com.twb.wechatrobot.service.AdMessageService;
+import com.twb.wechatrobot.service.msghandler.imp.AdMsgHandler;
+import com.twb.wechatrobot.service.msghandler.imp.QaMsgHandler;
 
 @RestController
 @RequestMapping("/wechat/adMessage")
 @CrossOrigin
-public class AdMessageController {
-  private final Logger logger = LoggerFactory.getLogger(this.getClass());
+public class AdMessageController
+{
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  @Autowired
-  private AdMessageService adMessageServiceImp;
+	@Autowired
+	private AdMessageService adMessageServiceImp;
 
-  
-	
+	@RequestMapping("/clearCache")
+	@ResponseBody
+	public String clearCache()
+	{
+		logger.info("============>clearCache");
+		AdMsgHandler.adList.clear();
+		QaMsgHandler.qaMap.clear();
+		return "success";
+	}
+
 	@RequestMapping("/getAdMsg")
 	@ResponseBody
 	public OutData getAdMsg(@RequestBody InData inData)
@@ -48,7 +59,7 @@ public class AdMessageController {
 
 		return outData;
 	}
-	
+
 	@RequestMapping("/delMember")
 	@ResponseBody
 	public OutData delMember(@RequestBody InData inData)
@@ -73,7 +84,7 @@ public class AdMessageController {
 
 		return outData;
 	}
-	
+
 	@RequestMapping("/notDel")
 	@ResponseBody
 	public OutData notDel(@RequestBody InData inData)
@@ -98,7 +109,6 @@ public class AdMessageController {
 
 		return outData;
 	}
-  	
 
 	@RequestMapping("/getDelMemberLog")
 	@ResponseBody
@@ -124,7 +134,5 @@ public class AdMessageController {
 
 		return outData;
 	}
-	
-  	
-  	
+
 }
