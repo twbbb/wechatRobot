@@ -9,6 +9,8 @@ public interface WechatGroupShowService {
 	OutData getGroupRecord(String groupName)throws Exception;
 
 	OutData getGrpUserRecord(String groupName)throws Exception;
+
+	OutData downloadGrpUserRecord(String groupName)throws Exception;
 	
 
 }

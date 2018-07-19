@@ -105,10 +105,12 @@ public class QaMsgHandler implements MessageHandler
 					{
 						sb.append("、");
 					}
-					qaMap.put(qadata.getQuestion().trim(), qadata.getAnswer().trim());
-					sb.append("\""+qadata.getQuestion().trim()+"\"");
+					qaMap.put(qadata.getQuestion().trim(), qadata.getId()+"、"+qadata.getQuestion().trim()+"\r\n"+qadata.getAnswer().trim());
+					qaMap.put("q"+qadata.getId(), qadata.getId()+"、"+qadata.getQuestion().trim()+"\r\n"+qadata.getAnswer().trim());
+					sb.append(qadata.getId()+".\""+qadata.getQuestion().trim()+"\"");
 				}
-				qaMap.put("swtc问答", "在群里喊以下问题，会得到机器人答复：\r\n"+sb.toString());
+				qaMap.put("swtc问答", "在群里喊以下问题(如:swtc官网)或编号(如:q1)，会得到机器人答复：\r\n"+sb.toString());
+				qaMap.put("q", "在群里喊以下问题(如:swtc官网)或编号(如:q1)，会得到机器人答复：\r\n"+sb.toString());
 			}
 
 		}
@@ -125,7 +127,7 @@ public class QaMsgHandler implements MessageHandler
 
 			String fromuser = wxText.fromUser.name;
 			MessageGroup mg = new MessageGroup();
-			mg.setContent(content + "\r\n" + qaMap.get(content));
+			mg.setContent(qaMap.get(content));
 			mg.setGroupName(wxText.fromGroup.name);
 			mg.setId(wxText.fromGroup.id);
 			QAMessageQueue.add(mg);
