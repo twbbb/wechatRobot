@@ -69,7 +69,13 @@ public class MyWeChatListener extends WeChatListener
 	@Override
 	public void onQRCode(String qrCode)
 	{
-		logger.info("onQRCode：" + qrCode);
+		logger.info("======================onQRCode========================");
+		logger.info(qrCode);
+		logger.info("=======================onQRCode=======================");
+		logger.info("=======================onQRCode=======================");
+		logger.info(qrCode);
+		logger.info("=======================onQRCode=======================");
+		
 	}
 
 	@Override
@@ -104,6 +110,12 @@ public class MyWeChatListener extends WeChatListener
 						wechatGroupServiceImp.deleteAllGroup();
 						wechatGroupServiceImp.handleAllGroup(wxGroupMap);
 						finish = true;
+						Thread.sleep(10000);
+						//删除用户重复统计表数据
+						wechatGroupServiceImp.wechatUserDeleteAll();
+						//插入数据
+						Thread.sleep(30000);
+						wechatGroupServiceImp.handleAllGroupSaveDb();
 					}
 					catch (Exception e)
 					{
@@ -121,7 +133,8 @@ public class MyWeChatListener extends WeChatListener
 			logger.error("群组处理失败！！",e);
 			e.printStackTrace();
 		}
-
+		
+	
 		logger.info(String.format("onLogin：您有%d名好友、活跃微信群%d个", wechatClient.userFriends().size(),
 				wechatClient.userGroups().size()));
 	}
@@ -130,7 +143,7 @@ public class MyWeChatListener extends WeChatListener
 	public void onMessage(WXMessage message)
 	{
 
-		logger.info(message.getClass().getName() + ",获取到消息：" + GSON.toJson(message));
+//		logger.info(message.getClass().getName() + ",获取到消息：" + GSON.toJson(message));
 		try
 		{
 			// 保存信息

@@ -12,4 +12,7 @@ public interface WechatGroupService {
 	
 	void totalGroupMember(HashMap<String, WXGroup> wxGroupMap)throws Exception;
 
+	public void wechatUserDeleteAll() throws Exception;
+	
+	public void handleAllGroupSaveDb() throws Exception;
 }

@@ -14,45 +14,52 @@ import com.twb.wechatrobot.thread.MyWeChatListener;
 import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXGroup;
 
 @Component
-public class GroupTask
-{
+public class GroupTask {
 	Logger logger = LoggerFactory.getLogger(GroupTask.class);
 
-	 
 	@Autowired
 	WechatGroupService wechatGroupServiceImp;
+
 	@Scheduled(cron = "1 0 0 * * ?")
-	public void task()
-	{
+	public void task() {
 
 		logger.info("GroupTask.task start");
-		try
-		{
+		try {
 			wechatGroupServiceImp.totalGroupMember(MyWeChatListener.wechatClient.userGroups());
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 
-			logger.error("GroupTask ,error.." ,e);
+			logger.error("GroupTask ,error..", e);
 			e.printStackTrace();
 		}
 
 		logger.info("GroupTask.task end");
 
-		//同步所有群数据到数据库
-		MyWeChatListener.finish=false;
-		
-		try
-		{
+		// 同步所有群数据到数据库
+		MyWeChatListener.finish = false;
+
+		try {
 			HashMap<String, WXGroup> wxGroupMap = MyWeChatListener.wechatClient.userGroups();
 			wechatGroupServiceImp.deleteAllGroup();
 			wechatGroupServiceImp.handleAllGroup(wxGroupMap);
-		}
-		catch (Exception e)
-		{
-			logger.error("handleAllGroup ,error.." ,e);
+		} catch (Exception e) {
+			logger.error("handleAllGroup ,error..", e);
 		}
 		MyWeChatListener.finish = true;
 	}
-	
+
+	@Scheduled(cron = "1 30 0 * * ?")
+	public void task2() {
+		logger.info("task2");
+		try {
+			wechatGroupServiceImp.wechatUserDeleteAll();
+			Thread.sleep(30000);
+			wechatGroupServiceImp.handleAllGroupSaveDb();
+		} catch (Exception e) {
+			logger.error("handleAllGroup ,error..", e);
+		}
+		
+	}
+
+
+
 }

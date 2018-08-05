@@ -70,6 +70,7 @@ public class WechatGroupServiceImp implements WechatGroupService
 		}
 		GROUPSET.clear();
 		userMap.clear();
+		
 		logger.info("deleteAllGroup end");
 	}
 	
@@ -142,6 +143,33 @@ public class WechatGroupServiceImp implements WechatGroupService
 //		}
 
 		logger.info("handleAllGroup end");
+	}
+	
+	@Transactional(rollbackFor = Exception.class)
+	public void wechatUserDeleteAll() throws Exception
+	{
+		logger.info("wechatUserDeleteAll start");
+		wechatUserRepository.deleteAllInBatch();
+
+		logger.info("wechatUserDeleteAll end");
+	}
+	
+	
+	@Transactional(rollbackFor = Exception.class)
+	public void handleAllGroupSaveDb() throws Exception
+	{
+		logger.info("handleAllGroupSaveDb start");
+		
+		for (Entry<String, WechatUser> userMapEntry : userMap.entrySet())
+		{
+			
+			WechatUser wu = userMapEntry.getValue();
+			logger.info("handleAllGroupSaveDb处理用户:"+wu.getUserName());
+			logger.info(MyWeChatListener.GSON.toJson(wu));
+			wechatUserRepository.save(wu);
+		}
+
+		logger.info("handleAllGroupSaveDb end");
 	}
 	
 	/**
