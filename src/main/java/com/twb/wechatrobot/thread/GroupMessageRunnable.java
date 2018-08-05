@@ -31,6 +31,7 @@ public class GroupMessageRunnable implements Runnable
 				MessageGroup mg = GroupMessageQueue.get();
 				flag = true;
 				String content = mg.getContent();
+				
 				File file = mg.getFile();
 				if(!StringUtils.isEmpty(content))
 				{

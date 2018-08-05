@@ -84,4 +84,23 @@ public class GroupController {
 		return outData;
 	}
   	
+ 	@RequestMapping("/downloadGrpUserRecord/{groupName}")
+  	@ResponseBody
+	public OutData downloadGrpUserRecord(@PathVariable("groupName") String groupName)
+	{
+  		logger.info("============>downloadGrpUserRecord:"+groupName);
+		OutData outData = new OutData();
+		try
+		{
+			outData = wechatGroupShowServiceImp.downloadGrpUserRecord(groupName);
+		}
+		catch (Exception e)
+		{
+			outData.setReturncode("false");
+			outData.setReturnmsg(e.getMessage());
+		}
+		
+		return outData;
+	}
+  	
 }

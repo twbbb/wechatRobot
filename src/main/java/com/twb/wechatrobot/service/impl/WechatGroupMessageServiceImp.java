@@ -198,6 +198,7 @@ public class WechatGroupMessageServiceImp implements WechatGroupMessageService
 		if(GroupMessage.MESSAGETYPE_TEXT.equals(gm.getMessageType()))
 		{
 			content = gm.getContentText();
+			content = content.replace("<br/>", "\r\n");
 			logger.info("发送消息内容：" + content);
 		}
 		else if(GroupMessage.MESSAGETYPE_IMAGE.equals(gm.getMessageType()))
@@ -216,7 +217,7 @@ public class WechatGroupMessageServiceImp implements WechatGroupMessageService
 			String id = wxgroup.id;
 			if (!StringUtils.isEmpty(name) && !StringUtils.isEmpty(id))
 			{
-//				if("开发".equals(name))
+//				if("啦啦啦".equals(name))
 //				{
 					MessageGroup mg = new MessageGroup();
 					mg.setContent(content);
