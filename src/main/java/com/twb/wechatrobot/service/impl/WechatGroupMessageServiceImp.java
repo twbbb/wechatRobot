@@ -5,6 +5,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -189,12 +191,14 @@ public class WechatGroupMessageServiceImp implements WechatGroupMessageService
 			return od;
 		}
 		
+		
 		GroupMessageLog gml = new GroupMessageLog();
 		gml.setCreatetime(new Date());
 		gml.setGm(gm);
 		groupMessageLogRepository.save(gml);
 		String content ="";
 		File file =null;
+		int maxSize = 99999;
 		if(GroupMessage.MESSAGETYPE_TEXT.equals(gm.getMessageType()))
 		{
 			content = gm.getContentText();
@@ -205,16 +209,19 @@ public class WechatGroupMessageServiceImp implements WechatGroupMessageService
 		{
 			file = new File(file_dir+gm.getContentFile());
 			logger.info("发送图片内容：" + file_dir+gm.getContentFile());
+			maxSize = 100;
 		}
 		
 		
 		
 		HashMap<String, WXGroup> wxgroupMap = MyWeChatListener.wechatClient.userGroups();
+		List<MessageGroup> sendList = new ArrayList<MessageGroup>();
 		for (Entry<String, WXGroup> wxgroupEntry : wxgroupMap.entrySet())
 		{
 			WXGroup wxgroup = wxgroupEntry.getValue();
 			String name = wxgroup.name;
 			String id = wxgroup.id;
+			int memberSize = wxgroup.members.size();
 			if (!StringUtils.isEmpty(name) && !StringUtils.isEmpty(id))
 			{
 //				if("啦啦啦".equals(name))
@@ -224,11 +231,29 @@ public class WechatGroupMessageServiceImp implements WechatGroupMessageService
 					mg.setGroupName(name);
 					mg.setId(id);
 					mg.setFile(file);
-					GroupMessageQueue.add(mg);
+					mg.setMemberSize(memberSize);
+					sendList.add(mg);
 //				}
 				
 			}
 		}
+		
+		Collections.sort(sendList, new  Comparator(){
+
+			@Override
+			public int compare(Object o1, Object o2) {
+				MessageGroup mg1 = (MessageGroup) o1;
+				MessageGroup mg2 = (MessageGroup) o2;
+				
+				return mg2.getMemberSize()-mg1.getMemberSize();
+			}});
+		//图片消息超过100后，只发100条
+		for(int i=0;i<sendList.size()&&i<maxSize;i++)
+		{
+			GroupMessageQueue.add(sendList.get(i));
+		}
+		
+		
 		od.setReturncode("true");
 		od.setReturnmsg("发送成功");
 		return od;

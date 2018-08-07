@@ -18,4 +18,9 @@ public class GroupMessageQueue
 	{
 		return GROUPMESSAGE_QUEUE.take();
 	}
+	
+	public static boolean isEmpty() 
+	{
+		return GROUPMESSAGE_QUEUE.isEmpty();
+	}
 }

@@ -8,6 +8,7 @@ public class MessageGroup
 	String groupName="";
 	String content="";
 	File file =null;
+	int memberSize = 0;
 	public String getId()
 	{
 		return id;
@@ -39,6 +40,12 @@ public class MessageGroup
 	public void setFile(File file)
 	{
 		this.file = file;
+	}
+	public int getMemberSize() {
+		return memberSize;
+	}
+	public void setMemberSize(int memberSize) {
+		this.memberSize = memberSize;
 	}
 			
 			
