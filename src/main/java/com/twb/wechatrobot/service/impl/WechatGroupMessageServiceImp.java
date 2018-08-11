@@ -209,7 +209,7 @@ public class WechatGroupMessageServiceImp implements WechatGroupMessageService
 		{
 			file = new File(file_dir+gm.getContentFile());
 			logger.info("发送图片内容：" + file_dir+gm.getContentFile());
-			maxSize = 100;
+//			maxSize = 100;
 		}
 		
 		

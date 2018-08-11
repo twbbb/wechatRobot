@@ -19,6 +19,16 @@ public class GroupMessageQueue
 		return GROUPMESSAGE_QUEUE.take();
 	}
 	
+	public static void clear() 
+	{
+		GROUPMESSAGE_QUEUE.clear();
+	}
+	
+	public static int size() 
+	{
+		return GROUPMESSAGE_QUEUE.size();
+	}
+	
 	public static boolean isEmpty() 
 	{
 		return GROUPMESSAGE_QUEUE.isEmpty();

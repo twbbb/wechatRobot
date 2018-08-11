@@ -52,6 +52,15 @@ public class GroupMessageRunnable implements Runnable
 			{
 				logger.error("GroupMessageRunnable ,error.." ,e);
 				e.printStackTrace();
+				try {
+					logger.error("GroupMessageQueue.clear:"+GroupMessageQueue.size());
+					GroupMessageQueue.clear();
+					
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
 			}
 		}
 
