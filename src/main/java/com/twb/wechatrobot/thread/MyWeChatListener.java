@@ -17,6 +17,7 @@ import com.twb.wechatrobot.service.msghandler.MessageHandler;
 
 import me.xuxiaoxiao.chatapi.wechat.WeChatClient;
 import me.xuxiaoxiao.chatapi.wechat.WeChatClient.WeChatListener;
+import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXContact;
 import me.xuxiaoxiao.chatapi.wechat.entity.contact.WXGroup;
 import me.xuxiaoxiao.chatapi.wechat.entity.message.WXMessage;
 
@@ -43,7 +44,7 @@ public class MyWeChatListener extends WeChatListener
 	public static volatile boolean finish = false;
 
 	@Override
-	public void onModContact()
+	public void onContact(WXContact contact, int operate)
 	{
 		logger.info("onModContact");
 		HashMap<String, WXGroup> wxGroupMap = wechatClient.userGroups();
@@ -110,12 +111,12 @@ public class MyWeChatListener extends WeChatListener
 						wechatGroupServiceImp.deleteAllGroup();
 						wechatGroupServiceImp.handleAllGroup(wxGroupMap);
 						finish = true;
-						Thread.sleep(10000);
-						//删除用户重复统计表数据
-						wechatGroupServiceImp.wechatUserDeleteAll();
-						//插入数据
-						Thread.sleep(30000);
-						wechatGroupServiceImp.handleAllGroupSaveDb();
+//						Thread.sleep(10000);
+//						//删除用户重复统计表数据
+//						wechatGroupServiceImp.wechatUserDeleteAll();
+//						//插入数据
+//						Thread.sleep(30000);
+//						wechatGroupServiceImp.handleAllGroupSaveDb();
 					}
 					catch (Exception e)
 					{

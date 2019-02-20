@@ -32,7 +32,7 @@ public class QaMsgHandler implements MessageHandler
 	@Autowired
 	QadataRepository qadataRepository;
 
-	private Logger logger = LoggerFactory.getLogger(GroupMsgHandler.class);
+	private Logger logger = LoggerFactory.getLogger(QaMsgHandler.class);
 
 	public static Map<String, String> qaMap = new ConcurrentHashMap<String, String>();
 	// @PostConstruct
@@ -84,34 +84,40 @@ public class QaMsgHandler implements MessageHandler
 		String content = wxText.content.replace("<br/>", "");
 		if (qaMap == null || qaMap.isEmpty())
 		{
-			List<Qadata> list = null;
-			try
-			{
-				list = qadataRepository.getAllQadata();
-			}
-			catch (Exception e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			if (list != null && list.size() > 0)
-			{
-				StringBuffer sb = new StringBuffer();
-				for(int i=0;i<list.size();i++)
+			synchronized (qaMap) {
+				if(qaMap == null || qaMap.isEmpty())
 				{
-					Qadata qadata = list.get(i);
-					if(i!=0)
+					List<Qadata> list = null;
+					try
 					{
-						sb.append("、");
+						list = qadataRepository.getAllQadata();
 					}
-					qaMap.put(qadata.getQuestion().trim(), qadata.getId()+"、"+qadata.getQuestion().trim()+"\r\n"+qadata.getAnswer().trim());
-					qaMap.put("q"+qadata.getId(), qadata.getId()+"、"+qadata.getQuestion().trim()+"\r\n"+qadata.getAnswer().trim());
-					sb.append(qadata.getId()+".\""+qadata.getQuestion().trim()+"\"");
+					catch (Exception e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+					if (list != null && list.size() > 0)
+					{
+						StringBuffer sb = new StringBuffer();
+						for(int i=0;i<list.size();i++)
+						{
+							Qadata qadata = list.get(i);
+							if(i!=0)
+							{
+								sb.append("、");
+							}
+							qaMap.put(qadata.getQuestion().trim(), qadata.getId()+"、"+qadata.getQuestion().trim()+"\r\n"+qadata.getAnswer().trim());
+							qaMap.put("q"+qadata.getId(), qadata.getId()+"、"+qadata.getQuestion().trim()+"\r\n"+qadata.getAnswer().trim());
+							sb.append(qadata.getId()+".\""+qadata.getQuestion().trim()+"\"");
+						}
+						qaMap.put("swtc问答", "在群里喊以下问题(如:swtc官网)或编号(如:q1)，会得到机器人答复：\r\n"+sb.toString());
+						qaMap.put("q", "在群里喊以下问题(如:swtc官网)或编号(如:q1)，会得到机器人答复：\r\n"+sb.toString());
+					}
 				}
-				qaMap.put("swtc问答", "在群里喊以下问题(如:swtc官网)或编号(如:q1)，会得到机器人答复：\r\n"+sb.toString());
-				qaMap.put("q", "在群里喊以下问题(如:swtc官网)或编号(如:q1)，会得到机器人答复：\r\n"+sb.toString());
 			}
+			
 
 		}
 		// 是@机器人消息
