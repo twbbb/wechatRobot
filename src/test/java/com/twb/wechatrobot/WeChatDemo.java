@@ -156,7 +156,7 @@ public class WeChatDemo
 					String groupId = scanner.nextLine();
 					System.out.println("memberIds,split by ',':");
 					String memberIds = scanner.nextLine();
-					wechatClient.addGroupMember(wechatClient.userGroup(groupId), Arrays.asList(memberIds.split(",")));
+//					wechatClient.addGroupMember(wechatClient.userGroup(groupId), Arrays.asList(memberIds.split(",")));
 				}
 					break;
 				case "delGroupMember":
@@ -165,7 +165,7 @@ public class WeChatDemo
 					String groupId = scanner.nextLine();
 					System.out.println("memberIds,split by ',':");
 					String memberIds = scanner.nextLine();
-					wechatClient.delGroupMember(wechatClient.userGroup(groupId), Arrays.asList(memberIds.split(",")));
+//					wechatClient.delGroupMember(wechatClient.userGroup(groupId), Arrays.asList(memberIds.split(",")));
 				}
 					break;
 				case "quit":
