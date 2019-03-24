@@ -13,7 +13,6 @@ import org.springframework.util.StringUtils;
 
 import com.twb.wechatrobot.entity.WechatMessage;
 import com.twb.wechatrobot.entity.WechatUser;
-import com.twb.wechatrobot.repository.CommitchainLogRepository;
 import com.twb.wechatrobot.repository.WechatMessageRepository;
 import com.twb.wechatrobot.service.MqProductService;
 import com.twb.wechatrobot.service.WechatMessageService;
@@ -35,8 +34,6 @@ public class WechatMessageServiceImp implements WechatMessageService
 	@Autowired
 	private WechatMessageRepository wechatMessageRepository;
 	
-	@Autowired
-	CommitchainLogRepository commitchainLogRepository;
 	
 	@Autowired
 	MqProductService mqProductServiceImp;
@@ -44,11 +41,6 @@ public class WechatMessageServiceImp implements WechatMessageService
 	@Value("${file_dir}")
 	private String file_dir;
 	
-	@Value("${COMMITCHAIN_GROUP_FLAG}")
-	private String commitchain_group_flag;
-	
-	@Value("${COMMITCHAIN_COUNTERPARTY}")
-	private String commitchain_counterparty;
 	
 
 	

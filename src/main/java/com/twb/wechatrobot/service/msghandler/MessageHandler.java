@@ -7,4 +7,5 @@ public interface MessageHandler {
 	
 	void handleMsg(WXMessage wm)throws Exception;
 
+	void init( ) throws Exception ;
 }

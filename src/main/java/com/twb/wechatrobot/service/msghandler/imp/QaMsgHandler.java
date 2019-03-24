@@ -155,4 +155,10 @@ public class QaMsgHandler implements MessageHandler
 		// }
 	}
 
+	@Override
+	public void init() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
