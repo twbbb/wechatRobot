@@ -7,12 +7,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -22,6 +22,7 @@ import com.twb.wechatrobot.entity.WechatMessage;
 import com.twb.wechatrobot.entity.WechatQaMessage;
 import com.twb.wechatrobot.entity.WechatQaMessageHis;
 import com.twb.wechatrobot.entity.WechatUser;
+import com.twb.wechatrobot.repository.DcPublicRepository;
 import com.twb.wechatrobot.repository.WechatQaMessageHisRepository;
 import com.twb.wechatrobot.repository.WechatQaMessageRepository;
 import com.twb.wechatrobot.service.impl.WechatGroupServiceImp;
@@ -49,10 +50,42 @@ public class PersonQaMsgHandler implements MessageHandler {
 
 	@Autowired
 	private WechatQaMessageHisRepository wechatQaMessageHisRepository;
+	@Autowired
+	DcPublicRepository dcPublicRepository ;
 
 	private static WechatQaMessage tempQaMessage = null;
+	
+	private static Date answerDate=null;
 
+	private static String answerStr = "";
 	private static String QAGROUPID = "";
+	
+	@Scheduled(cron = "0/6 * * * * ?")
+	public void send() {
+
+		Date now = new Date();
+		if(answerDate!=null&&!StringUtils.isEmpty(answerStr)&&tempQaMessage != null )
+		{
+			long dif =now.getTime()-answerDate.getTime();
+			logger.info("PersonQaMsgHandler.send 间隔为："+dif);
+			if(dif>6000)
+			{
+				try {
+					sendAnswer();
+					Thread.sleep(2000);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				answerDate=null;
+				answerStr = "";
+			}
+		
+		}
+		
+
+	}
 
 	@Transactional(rollbackFor = Exception.class)
 	public void init() throws Exception {
@@ -92,6 +125,16 @@ public class PersonQaMsgHandler implements MessageHandler {
 		}
 		WXText wxText = (WXText) message;
 		String content = wxText.content.replace("<br/>", "\r\n");
+		
+		answerStr = content;
+		answerDate = new Date();
+
+	}
+	
+	@Transactional(rollbackFor = Exception.class)
+	private void sendAnswer() {
+		
+		String content = answerStr;
 		String answerFlag = "";
 		if (!StringUtils.isEmpty(content.trim())&&!"0".equals(content.trim())) {
 			try {
@@ -134,7 +177,6 @@ public class PersonQaMsgHandler implements MessageHandler {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-
 	}
 
 	private void answerWqm(String answerContent) throws Exception {
@@ -150,12 +192,22 @@ public class PersonQaMsgHandler implements MessageHandler {
 		if(StringUtils.isEmpty(id))
 		{
 			id = tempQaMessage.getFromuserId();
-			message = time+ " 消息：" + content + "\r\n"+"回复："+ answerContent;
+			message = time+ " 消息：" + content.replace("<br/>", "\r\n") + "\r\n"+"回复："+ answerContent;
 		}
 		else{
-			message = time+ " 消息：" + content + "\r\n"+"回复："+"@" + userName +","+ answerContent;
+			message = time+ " 消息：" + content.replace("<br/>", "\r\n") + "\r\n"+"回复："+"@" + userName +","+ answerContent;
 		}
-
+		
+		
+		String answerEnd = dcPublicRepository.getStrValue("answerEnd");
+		
+		if(!StringUtils.isEmpty(answerEnd)){
+			message=message+"\r\n"+answerEnd;
+		}
+		else{
+			logger.info("answerEnd is empty");
+		}
+		
 		MessageGroup mg = new MessageGroup();
 		mg.setContent(message);
 		mg.setId(id);
@@ -284,7 +336,7 @@ public class PersonQaMsgHandler implements MessageHandler {
 			}
 		}
 		if (!StringUtils.isEmpty(QAGROUPID)) {
-			String message = headmsg + content;
+			String message = headmsg + content.replace("<br/>", "\r\n");
 			MessageGroup mg = new MessageGroup();
 			mg.setContent(message);
 			mg.setId(QAGROUPID);

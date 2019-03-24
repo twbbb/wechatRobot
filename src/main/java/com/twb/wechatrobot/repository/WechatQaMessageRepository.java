@@ -25,8 +25,8 @@ public interface WechatQaMessageRepository extends JpaRepository<WechatQaMessage
 	"wechat_qa_message_his.fromuser_id, " + 
 	"wechat_qa_message_his.fromuser_name, " + 
 	"wechat_qa_message_his.content_text, " + 
-	"wechat_qa_message_his.answer_text, " + 
 	"wechat_qa_message_his.answer_flag, " + 
+	"wechat_qa_message_his.answer_time, " + 
 	"wechat_qa_message_his.content_file, " + 
 	"wechat_qa_message_his.content_link, " + 
 	"wechat_qa_message_his.message_type) " + 
