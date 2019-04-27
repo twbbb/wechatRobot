@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import com.twb.wechatrobot.data.MessageGroup;
+import com.twb.wechatrobot.utils.CommonUtils;
 import com.twb.wechatrobot.utils.QAMessageQueue;
 
 public class QAMessageRunnable implements Runnable
@@ -30,7 +31,7 @@ public class QAMessageRunnable implements Runnable
 				{
 					Thread.sleep((long) (GroupMessageRunnable.timedelay * Math.random() + 3000));
 				}
-				String content = mg.getContent();
+				String content = CommonUtils.htmlReplace(mg.getContent());
 				File file = mg.getFile();
 				if(!StringUtils.isEmpty(content))
 				{

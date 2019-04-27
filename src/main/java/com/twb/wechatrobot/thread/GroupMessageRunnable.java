@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import com.twb.wechatrobot.data.MessageGroup;
+import com.twb.wechatrobot.utils.CommonUtils;
 import com.twb.wechatrobot.utils.GroupMessageQueue;
 
 public class GroupMessageRunnable implements Runnable
@@ -30,7 +31,7 @@ public class GroupMessageRunnable implements Runnable
 				flag = false;
 				MessageGroup mg = GroupMessageQueue.get();
 				flag = true;
-				String content = mg.getContent();
+				String content = CommonUtils.htmlReplace(mg.getContent());
 				
 				File file = mg.getFile();
 				if(!StringUtils.isEmpty(content))

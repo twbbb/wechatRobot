@@ -1,12 +1,11 @@
 package com.twb.wechatrobot.service.msghandler.imp;
 
-import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +22,7 @@ import com.twb.wechatrobot.entity.WechatQaMessage;
 import com.twb.wechatrobot.entity.WechatQaMessageHis;
 import com.twb.wechatrobot.entity.WechatUser;
 import com.twb.wechatrobot.repository.DcPublicRepository;
+import com.twb.wechatrobot.repository.WechatMessageRepository;
 import com.twb.wechatrobot.repository.WechatQaMessageHisRepository;
 import com.twb.wechatrobot.repository.WechatQaMessageRepository;
 import com.twb.wechatrobot.service.impl.WechatGroupServiceImp;
@@ -49,6 +49,9 @@ public class PersonQaMsgHandler implements MessageHandler {
 	private WechatQaMessageRepository wechatQaMessageRepository;
 
 	@Autowired
+	private WechatMessageRepository wechatMessageRepository;
+	
+	@Autowired
 	private WechatQaMessageHisRepository wechatQaMessageHisRepository;
 	@Autowired
 	DcPublicRepository dcPublicRepository ;
@@ -58,7 +61,7 @@ public class PersonQaMsgHandler implements MessageHandler {
 	private static Date answerDate=null;
 
 	private static String answerStr = "";
-	private static String QAGROUPID = "";
+	private static String QAGROUPID = "";//机器人回复群id
 	
 	@Scheduled(cron = "0/6 * * * * ?")
 	public void send() {
@@ -294,7 +297,7 @@ public class PersonQaMsgHandler implements MessageHandler {
 			WXText wxText = (WXText) message;
 			String content = wxText.content.replace("<br/>", "\r\n");
 			// 是@机器人消息
-			if (!wxText.content.contains("@" + robot_name)) {
+			if (!wxText.content.toUpperCase().contains("@" + robot_name)) {
 				return;
 			}
 
@@ -317,6 +320,7 @@ public class PersonQaMsgHandler implements MessageHandler {
 		String userName = wqm.getFromuserName();
 		String groupName = wqm.getWxgroupName();
 		String content = wqm.getContentText();
+		String msgid = wqm.getMsgid();
 		DateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
 		String time = sdf.format(wqm.getTimestamp());
 		String headmsg = "";
@@ -336,7 +340,19 @@ public class PersonQaMsgHandler implements MessageHandler {
 			}
 		}
 		if (!StringUtils.isEmpty(QAGROUPID)) {
-			String message = headmsg + content.replace("<br/>", "\r\n");
+			//添加前后消息
+			List<WechatMessage> list = wechatMessageRepository.getMsgExt(msgid);
+			StringBuffer extMsgSb = new StringBuffer();
+			if(list!=null&&!list.isEmpty()){
+				extMsgSb.append("\r\n前后消息:\r\n");
+				for(WechatMessage wechatMessage :list){
+					extMsgSb.append(sdf.format(wechatMessage.getTimestamp())).append(" ").append(wechatMessage.getContentText()).append("\r\n");
+				}
+			}
+			String extMsgStr = extMsgSb.toString();
+			wqm.setExtMessage(extMsgStr);
+			wechatQaMessageRepository.save(wqm);
+			String message = headmsg + content.replace("<br/>", "\r\n")+extMsgStr.replace("<br/>", "\r\n");
 			MessageGroup mg = new MessageGroup();
 			mg.setContent(message);
 			mg.setId(QAGROUPID);

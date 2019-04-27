@@ -27,6 +27,8 @@ public class WechatQaMessage
 	private String contentText  =""; // 消息内容,文本，语音转换的文本,链接标题',
 	private String contentFile  =""; //消息内容，语音路径,图片路径',
 	private String contentLink  =""; //  '消息内容，链接地址'
+	private String extMessage = "";//前后消息
+	
 	public Integer getId()
 	{
 		return id;
@@ -114,6 +116,12 @@ public class WechatQaMessage
 	public void setContentLink(String contentLink)
 	{
 		this.contentLink = contentLink;
+	}
+	public String getExtMessage() {
+		return extMessage;
+	}
+	public void setExtMessage(String extMessage) {
+		this.extMessage = extMessage;
 	}
 	
 

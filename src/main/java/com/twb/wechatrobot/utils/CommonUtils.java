@@ -1,5 +1,6 @@
 package com.twb.wechatrobot.utils;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,7 +10,17 @@ import java.util.regex.Pattern;
 public class CommonUtils
 {
 
-
+	public static String htmlReplace(String str){
+        str = str.replace("&ldquo;", "“");
+        str = str.replace("&rdquo;", "”");
+        str = str.replace("&nbsp;", " ");
+        str = str.replace("&amp;", "&");
+        str = str.replace("&#39;", "'");
+        str = str.replace("&rsquo;", "’");
+        str = str.replace("&mdash;", "—");
+        str = str.replace("&ndash;", "–");
+        return str;
+    }
 	public static String toString(Object obj)
 	{
 		if (obj == null)
@@ -20,10 +31,14 @@ public class CommonUtils
 		{
 			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(obj);
 		}
-		else
-		{
+		else if (obj instanceof BigDecimal) {
 			return obj.toString();
 		}
+		else
+		{
+			return obj.toString().trim();
+		}
+	
 
 	}
 

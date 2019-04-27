@@ -32,6 +32,8 @@ public class WechatQaMessageHis
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date answerTime ; // 消息时间戳
 	
+	private String extMessage = "";//前后消息
+
 	public Integer getId()
 	{
 		return id;
@@ -137,6 +139,12 @@ public class WechatQaMessageHis
 	}
 	public void setAnswerTime(Date answerTime) {
 		this.answerTime = answerTime;
+	}
+	public String getExtMessage() {
+		return extMessage;
+	}
+	public void setExtMessage(String extMessage) {
+		this.extMessage = extMessage;
 	}
 
 	

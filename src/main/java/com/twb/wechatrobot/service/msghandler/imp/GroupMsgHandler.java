@@ -61,11 +61,23 @@ public class GroupMsgHandler implements MessageHandler
 			WXText wxText = (WXText) message;
 			String content = wxText.content.replace("<br/>", "\r\n");
 			handleTextMsg(wxText);
+			//清空群发消息
+			if("stop".equals(content)){
+				GroupMessageQueue.clear();
+				MessageGroup mg = new MessageGroup();
+				mg.setContent(content+"成功");
+				mg.setGroupName(wxText.fromGroup.name);
+				mg.setId(wxText.fromGroup.id);
+				GroupMessageQueue.add(mg);
+			}
+			else{
 				MessageGroup mg = new MessageGroup();
 				mg.setContent(content);
 				mg.setGroupName(wxText.fromGroup.name);
 				mg.setId(wxText.fromGroup.id);
 				GroupMessageQueue.add(mg);
+			}
+				
 			
 		}
 		else if (message instanceof WXImage)

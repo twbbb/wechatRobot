@@ -1,9 +1,13 @@
 package com.twb.wechatrobot.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import com.twb.wechatrobot.entity.WechatMessage;
 import com.twb.wechatrobot.entity.WechatQaMessage;
 
 
@@ -29,7 +33,9 @@ public interface WechatQaMessageRepository extends JpaRepository<WechatQaMessage
 	"wechat_qa_message_his.answer_time, " + 
 	"wechat_qa_message_his.content_file, " + 
 	"wechat_qa_message_his.content_link, " + 
-	"wechat_qa_message_his.message_type) " + 
+	"wechat_qa_message_his.message_type," +
+	"wechat_qa_message_his.ext_message"
+	+ ") " + 
 	"SELECT " + 
 	"wechat_qa_message.id, " + 
 	"wechat_qa_message.msgid, " + 
@@ -43,9 +49,12 @@ public interface WechatQaMessageRepository extends JpaRepository<WechatQaMessage
 	"SYSDATE(), " + 
 	"wechat_qa_message.content_file, " + 
 	"wechat_qa_message.content_link, " + 
-	"wechat_qa_message.message_type " + 
+	"wechat_qa_message.message_type, " +
+	"wechat_qa_message.ext_message " + 
 	"FROM " + 
 	"wechat_qa_message",nativeQuery = true)
 	public void moveToHis() throws Exception;
+	
+	
 
 }
